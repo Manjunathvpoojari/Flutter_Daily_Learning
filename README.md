@@ -1,4 +1,4 @@
-# 🔐 Flutter Login App – Feature Evolution
+# Flutter Login App – Feature Evolution (Phase 1 & 2 Learning)
 
 This Login App is developed as part of my mentor-guided Flutter internship learning.  
 The application has been continuously enhanced with new features as concepts were introduced during daily sessions.
