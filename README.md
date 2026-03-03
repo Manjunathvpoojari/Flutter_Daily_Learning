@@ -82,13 +82,30 @@ The application has been continuously enhanced with new features as concepts wer
 
 ## 🧪 Assessments & Practice Integration
 
-- Quiz-based Concept Reinforcement
 - Splash Screen Implementation
 - Continuous Feature Enhancement Based on Mentor Guidance
-- Weekend Assignment Integration into Login App
+- Weekend Assignment Integration into Login App ex- video intro to this
 
 ---
 
+## 🔥 Firebase Integration (Initial Setup – Google Sign-In)
+
+- Created a Firebase project using Firebase Console.
+- Registered the Android application with the correct package name.
+- Downloaded and added `google-services.json` inside the `android/app/` directory.
+- Updated project-level and app-level `build.gradle.kts` files with required Firebase plugins.
+- Added necessary dependencies in `pubspec.yaml`:
+  - `firebase_core`
+  - `firebase_auth`
+  - `google_sign_in`
+- Executed `flutter pub get` to install dependencies.
+- Initialized Firebase in `main.dart` using:
+  - `WidgetsFlutterBinding.ensureInitialized()`
+  - `Firebase.initializeApp()`
+- Implemented Google Sign-In authentication flow.
+- Successfully connected Google credentials with Firebase Authentication for secure login.
+
+---
 ## 📌 Project Status
 
 This Login App is a continuously evolving learning project.  
