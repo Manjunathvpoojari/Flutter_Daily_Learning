@@ -105,6 +105,15 @@ The application has been continuously enhanced with new features as concepts wer
 - Implemented Google Sign-In authentication flow.
 - Successfully connected Google credentials with Firebase Authentication for secure login.
 
+## Continue with Firebase
+
+- Integrated **Firebase Authentication** and **Cloud Firestore** with the Flutter application.
+- Implemented user authentication using **Email and Password** through Firebase Auth.
+- Developed a **User Registration feature** that allows new users to create an account within the application.
+- Stored user information such as **username and email** in **Firebase Cloud Firestore**.
+- Enabled users to **log in securely using their registered email and password**, with authentication handled by Firebase.
+- Ensured seamless interaction between the Flutter frontend and Firebase backend for user data management.
+
 ---
 ## 📌 Project Status
 

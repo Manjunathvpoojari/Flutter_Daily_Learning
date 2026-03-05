@@ -1,3 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:first_app/auth/register.dart';
 import 'package:first_app/screens/home_page.dart';
 import 'package:flutter/material.dart';
 
@@ -7,159 +10,201 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _formkey = GlobalKey<FormState>();
-
-  final TextEditingController _usernameController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  AnimationController? _controller;
-  Animation<double>? _fadeAnimation;
-  Animation<double>? _scaleAnimation;
-  Animation<Offset>? _slideAnimation;
-
-  bool _isPasswordVisible = true;
+  // ignore: non_constant_identifier_names
+  late AnimationController _Controller;
+  late Animation<double> _fadeanimation;
+  late Animation<double> _scaleanimation;
+  late Animation<Offset> _slideanimation;
 
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
+    _Controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 900),
+      duration: Duration(seconds: 2),
     );
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller!,
-      curve: Curves.easeInOut,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _controller!, curve: Curves.elasticOut));
-
-    _slideAnimation = Tween<Offset>(begin: Offset(0, 1), end: Offset.zero)
-        .animate(
-          CurvedAnimation(parent: _controller!, curve: Curves.easeInOutCubic),
-        );
-
-    _controller!.forward();
+    _fadeanimation = Tween<double>(begin: 0, end: 1).animate(_Controller);
+    _scaleanimation = Tween<double>(begin: 0, end: 1).animate(_Controller);
+    _slideanimation = Tween<Offset>(
+      begin: Offset(0, 1),
+      end: Offset(0, 0),
+    ).animate(_Controller);
+    _Controller.forward();
   }
 
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
+  bool _isPasswordVisible = true;
+  String message = "";
 
-  void login() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HomePage(username: _usernameController.text),
-      ),
-    );
+  Future<void> login() async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      String username = userDoc['username'] ?? "User";
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage(username: username)),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        message = e.message ?? "An error occurred during login";
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    /// prevents late error
-    if (_fadeAnimation == null ||
-        _scaleAnimation == null ||
-        _slideAnimation == null) {
-      return SizedBox();
-    }
-
     return Scaffold(
       backgroundColor: Colors.yellowAccent,
       appBar: AppBar(
         title: Text("Login Page"),
         backgroundColor: Colors.orangeAccent,
       ),
-
       body: FadeTransition(
-        opacity: _fadeAnimation!,
-        child: ScaleTransition(
-          scale: _scaleAnimation!,
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Form(
-                key: _formkey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
+        opacity: _fadeanimation,
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: Form(
+              key: _formkey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SlideTransition(
+                    position: _slideanimation,
+                    child: Text(
                       "Welcome Back!",
                       style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 95, 2, 102),
+                        color: const Color.fromARGB(255, 95, 2, 102),
                       ),
                     ),
-
-                    SizedBox(height: 25),
-
-                    TextFormField(
-                      controller: _usernameController,
-                      decoration: InputDecoration(
-                        labelText: "Username",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
-                      ),
+                  ),
+                  SizedBox(height: 20),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: "Enter Email",
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.email),
                     ),
-
-                    SizedBox(height: 20),
-
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: "Email",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                    ),
-
-                    SizedBox(height: 20),
-
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: !_isPasswordVisible,
-                      decoration: InputDecoration(
-                        labelText: "Password",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            });
-                          },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Please enter your email";
+                      }
+                      if (!RegExp(
+                        r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]+$',
+                      ).hasMatch(value)) {
+                        return "Please enter a valid email address";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 30),
+                  // TextFormField(
+                  //   controller: _emailController,
+                  //   decoration: InputDecoration(
+                  //     labelText: "Enter Email",
+                  //     border: OutlineInputBorder(),
+                  //     prefixIcon: Icon(Icons.email),
+                  //   ),
+                  //   validator: (value) {
+                  //     if (value == null || value.isEmpty) {
+                  //       return "Please enter your email";
+                  //     }
+                  //     if (!RegExp(r'^[a-zA-Z0-9._]+@[a-zA-Z0-9]+\.[a-zA-Z]+$').hasMatch(value)) {
+                  //       return "Please enter a valid email address";
+                  //     }
+                  //     return null;
+                  //   },
+                  // ),
+                  // SizedBox(height: 30),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: !_isPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: "Enter Password",
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                         ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
                       ),
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Please enter your password/ Password cannot be empty";
+                      }
+                      if (value.length < 6) {
+                        return "Password must be at least 6 characters long";
+                      }
+                      if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                        return "Password must contain at least one uppercase letter";
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 20),
 
-                    SizedBox(height: 30),
-
-                    SlideTransition(
-                      position: _slideAnimation!,
-                      child: ScaleTransition(
-                        scale: _scaleAnimation!,
-                        child: ElevatedButton(
-                          onPressed: login,
-                          child: Text("Login"),
-                        ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Don't have an account?"),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RegisterScreen(),
+                            ),
+                          );
+                        },
+                        child: Text("Register"),
                       ),
+                    ],
+                  ),
+
+                  ScaleTransition(
+                    scale: _scaleanimation,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (_formkey.currentState!.validate()) {
+                          login();
+                        }
+                      },
+                      child: Text("Login"),
                     ),
-                  ],
-                ),
+                  ),
+
+                  Text(
+                    message,
+                    style: TextStyle(fontSize: 18, color: Colors.redAccent),
+                  ),
+                ],
               ),
             ),
           ),
