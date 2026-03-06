@@ -1,5 +1,6 @@
 import 'package:first_app/auth/login.dart';
 import 'package:first_app/model/counter_model.dart';
+import 'package:first_app/screens/cred_op.dart';
 import 'package:first_app/screens/grid_example.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/screens/rest_api.dart';
@@ -140,6 +141,17 @@ class HomePage extends StatelessWidget {
                   );
                 },
                 child: Text("Open REST API Page"),
+              ),
+
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => StudentsPage()),
+                  );
+                },
+                child: Text("Open Students Page"),
               ),
             ],
           ),

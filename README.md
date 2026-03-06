@@ -1,8 +1,10 @@
-# Flutter Login App – Feature Evolution (Phase 1 & 2 Learning)
+# Flutter Login App – Feature Evolution (Phase 1, Phase 2, and Phase 3 Learning)
 
 This Login App is developed as part of my mentor-guided Flutter internship learning.  
 The application has been continuously enhanced with new features as concepts were introduced during daily sessions.
 
+---
+## **Phase 1**
 ---
 
 ## 🚀 Core Features
@@ -55,6 +57,8 @@ The application has been continuously enhanced with new features as concepts wer
 - Shared State Updates Across Screens
 
 ---
+## **Phase 2**
+---
 
 ## 🌐 Networking & API Integration
 
@@ -87,6 +91,8 @@ The application has been continuously enhanced with new features as concepts wer
 - Weekend Assignment Integration into Login App ex- video intro to this
 
 ---
+## **Phase 3**
+---
 
 ## 🔥 Firebase Integration (Initial Setup – Google Sign-In)
 
@@ -105,7 +111,9 @@ The application has been continuously enhanced with new features as concepts wer
 - Implemented Google Sign-In authentication flow.
 - Successfully connected Google credentials with Firebase Authentication for secure login.
 
-## Continue with Firebase
+---
+
+## 🔥Continue with Firebase
 
 - Integrated **Firebase Authentication** and **Cloud Firestore** with the Flutter application.
 - Implemented user authentication using **Email and Password** through Firebase Auth.
@@ -113,6 +121,18 @@ The application has been continuously enhanced with new features as concepts wer
 - Stored user information such as **username and email** in **Firebase Cloud Firestore**.
 - Enabled users to **log in securely using their registered email and password**, with authentication handled by Firebase.
 - Ensured seamless interaction between the Flutter frontend and Firebase backend for user data management.
+
+---
+
+## 🧑🏻‍🎓 CRUD Operations on Student List
+
+- Implemented **CRUD operations using Firebase** on the Student List page.
+- The Firebase database was successfully connected to store and manage student records.
+- The page was designed with a **modern interface**, including proper alignment, icons, and a clean layout.
+- An **Add Student** section was integrated, allowing users to add new student details easily.
+- The added students are displayed in a **dynamic list view**.
+- Users can **edit existing student details** or **delete records safely** using appropriate action icons.
+- Overall, the implementation ensures **efficient data management and a user-friendly interface**.
 
 ---
 ## 📌 Project Status
