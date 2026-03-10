@@ -1,6 +1,6 @@
 import 'package:first_app/auth/login.dart';
 import 'package:first_app/model/counter_model.dart';
-import 'package:first_app/screens/cred_op.dart';
+import 'package:first_app/screens/crud_op.dart';
 import 'package:first_app/screens/grid_example.dart';
 import 'package:flutter/material.dart';
 import 'package:first_app/screens/rest_api.dart';
