@@ -132,6 +132,7 @@ The application has been continuously enhanced with new features as concepts wer
 - An **Add Student** section was integrated, allowing users to add new student details easily.
 - The added students are displayed in a **dynamic list view**.
 - Users can **edit existing student details** or **delete records safely** using appropriate action icons.
+- Users can even **Search for the student** and is guided through proper actions.
 - Overall, the implementation ensures **efficient data management and a user-friendly interface**.
 
 ---

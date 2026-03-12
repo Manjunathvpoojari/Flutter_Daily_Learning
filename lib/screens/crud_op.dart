@@ -1,5 +1,3 @@
-// ignore: unused_import
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -64,6 +62,22 @@ class StudentsPage extends StatefulWidget {
 class _StudentsPageState extends State<StudentsPage> {
   final _service = StudentService();
 
+  String _searchQuery = '';
+  bool _isSearching = false;
+
+  // Searching name And email
+  List<Student> _applySearch(List<Student> students) {
+    if (_searchQuery.isEmpty) return students;
+
+    return students
+        .where(
+          (s) =>
+              s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              s.email.toLowerCase().contains(_searchQuery.toLowerCase()),
+        )
+        .toList();
+  }
+
   void _openform({Student? student}) {
     showModalBottomSheet(
       context: context,
@@ -122,11 +136,41 @@ class _StudentsPageState extends State<StudentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Students List"),
+        title: _isSearching
+            ? TextField(
+                autofocus: true,
+                style: TextStyle(
+                  color: const Color.fromARGB(255, 232, 187, 80),
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Search by Name or Email',
+                  hintStyle: TextStyle(
+                    color: const Color.fromARGB(153, 240, 238, 238),
+                  ),
+                  border: InputBorder.none,
+                ),
+                onChanged: (val) => setState(() {
+                  _searchQuery = val;
+                }),
+              )
+            : Text("Students List"),
         centerTitle: true,
         backgroundColor: Colors.purple,
         foregroundColor: Colors.white,
         elevation: 0,
+
+        actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            tooltip: _isSearching ? 'CloseSearch' : 'Search',
+            onPressed: () => setState(() {
+              _isSearching = !_isSearching;
+              if (!_isSearching) {
+                _searchQuery = '';
+              }
+            }),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openform(),
@@ -156,8 +200,9 @@ class _StudentsPageState extends State<StudentsPage> {
             );
           }
 
+          final students = _applySearch(snapshot.data ?? []);
+
           // Data Empty, show a message indicating no students found
-          final students = snapshot.data ?? [];
           if (students.isEmpty) {
             return Center(
               child: Column(
@@ -165,23 +210,49 @@ class _StudentsPageState extends State<StudentsPage> {
                 children: [
                   Icon(Icons.person_off, size: 48, color: Colors.grey),
                   SizedBox(height: 8),
-                  Text('No students found. Please add some students.'),
+                  Text(
+                    _searchQuery.isNotEmpty
+                        ? 'No Students found "$_searchQuery"'
+                        : 'No students found. Please add some students.',
+                  ),
                 ],
               ),
             );
           }
 
           // Data loaded successfully, show the list of students
-          return ListView.separated(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
-            itemCount: students.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+          return Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: Row(
+                  children: [
+                    Text(
+                      'Showing ${students.length} Student${students.length == 1 ? '' : 's'}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: const Color.fromARGB(255, 82, 160, 255),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-            itemBuilder: (_, i) => _StudentCard(
-              student: students[i],
-              onEdit: () => _openform(student: students[i]),
-              onDelete: () => _confirmDelete(students[i]),
-            ),
+              Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
+                  itemCount: students.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+
+                  itemBuilder: (_, i) => _StudentCard(
+                    student: students[i],
+                    onEdit: () => _openform(student: students[i]),
+                    onDelete: () => _confirmDelete(students[i]),
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),
