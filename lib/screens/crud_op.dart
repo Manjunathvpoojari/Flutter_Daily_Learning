@@ -50,6 +50,13 @@ class StudentService {
 
   // method to delete students
   Future<void> deleteStudent(String id) => _col.doc(id).delete();
+
+  // method to filterBYgrades
+  Stream<List<Student>> getStudentsByGrade(String grade) => _col
+      .where('grade', isEqualTo: grade)
+      .orderBy('name')
+      .snapshots()
+      .map((s) => s.docs.map((doc) => Student.fromFirestore(doc)).toList());
 }
 
 class StudentsPage extends StatefulWidget {
@@ -62,8 +69,19 @@ class StudentsPage extends StatefulWidget {
 class _StudentsPageState extends State<StudentsPage> {
   final _service = StudentService();
 
+  // Search OP
   String _searchQuery = '';
   bool _isSearching = false;
+
+  // Filter Grade
+  String _selectedGrade = 'All';
+
+  final List<String> _grades = ['All', 'A', 'B', 'C', 'D'];
+
+  Stream<List<Student>> get _activeStream {
+    if (_selectedGrade == "All") return _service.getStudents();
+    return _service.getStudentsByGrade(_selectedGrade);
+  }
 
   // Searching name And email
   List<Student> _applySearch(List<Student> students) {
@@ -178,83 +196,148 @@ class _StudentsPageState extends State<StudentsPage> {
         label: Text("Add Student"),
       ),
 
-      body: StreamBuilder<List<Student>>(
-        stream: _service.getStudents(),
-        builder: (context, snapshot) {
-          // Waiting for data to load, show a loading indicator
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          Container(
+            color: Colors.purple.shade50,
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
 
-          // Error occurred while loading data, show an error message
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  SizedBox(height: 8),
-                  Text('Error loading students: ${snapshot.error}'),
-                ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+
+              child: Row(
+                children: _grades.map((grade) {
+                  final isSelected = _selectedGrade == grade;
+
+                  return Padding(
+                    padding: EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(
+                        grade == 'All' ? 'All Grades' : 'Grade $grade',
+                      ),
+                      selected: isSelected,
+                      selectedColor: Colors.purple,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.w500,
+                      ),
+
+                      onSelected: (_) => setState(() => _selectedGrade = grade),
+                    ),
+                  );
+                }).toList(),
               ),
-            );
-          }
+            ),
+          ),
 
-          final students = _applySearch(snapshot.data ?? []);
+          Expanded(
+            child: StreamBuilder<List<Student>>(
+              stream: _activeStream,
+              builder: (context, snapshot) {
+                // Waiting for data to load, show a loading indicator
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
 
-          // Data Empty, show a message indicating no students found
-          if (students.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.person_off, size: 48, color: Colors.grey),
-                  SizedBox(height: 8),
-                  Text(
-                    _searchQuery.isNotEmpty
-                        ? 'No Students found "$_searchQuery"'
-                        : 'No students found. Please add some students.',
-                  ),
-                ],
-              ),
-            );
-          }
+                // Error occurred while loading data, show an error message
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.error_outline, size: 48, color: Colors.red),
+                        SizedBox(height: 8),
+                        Text('Error loading students: ${snapshot.error}'),
+                      ],
+                    ),
+                  );
+                }
 
-          // Data loaded successfully, show the list of students
-          return Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: Row(
+                final students = _applySearch(snapshot.data ?? []);
+
+                // Data Empty, show a message indicating no students found
+                if (students.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.person_off, size: 48, color: Colors.grey),
+                        SizedBox(height: 8),
+                        Text(
+                          _searchQuery.isNotEmpty
+                              ? 'No Students found "$_searchQuery"'
+                              : _selectedGrade != 'All'
+                              ? 'No Students in Grade "$_selectedGrade"'
+                              : 'No students found. Please add some students.',
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // Data loaded successfully, show the list of students
+                return Column(
                   children: [
-                    Text(
-                      'Showing ${students.length} Student${students.length == 1 ? '' : 's'}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: const Color.fromARGB(255, 82, 160, 255),
-                        fontWeight: FontWeight.bold,
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Showing ${students.length} Student${students.length == 1 ? '' : 's'}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: const Color.fromARGB(255, 82, 160, 255),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          if (_selectedGrade != 'All') ...[
+                            SizedBox(width: 8),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.purple,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+
+                              child: Text(
+                                'Grade $_selectedGrade',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    Expanded(
+                      child: ListView.separated(
+                        padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
+                        itemCount: students.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+
+                        itemBuilder: (_, i) => _StudentCard(
+                          student: students[i],
+                          onEdit: () => _openform(student: students[i]),
+                          onDelete: () => _confirmDelete(students[i]),
+                        ),
                       ),
                     ),
                   ],
-                ),
-              ),
-
-              Expanded(
-                child: ListView.separated(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 100),
-                  itemCount: students.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-
-                  itemBuilder: (_, i) => _StudentCard(
-                    student: students[i],
-                    onEdit: () => _openform(student: students[i]),
-                    onDelete: () => _confirmDelete(students[i]),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
