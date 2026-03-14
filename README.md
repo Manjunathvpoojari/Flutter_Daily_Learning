@@ -134,6 +134,7 @@ The application has been continuously enhanced with new features as concepts wer
 - Users can **edit existing student details** or **delete records safely** using appropriate action icons.
 - Users can even **Search for the student** and is guided through proper actions.
 - Users can even **Filter out the Students** based on the Grades sections.
+- **Employee** data page made exactly like Student page
 - Overall, the implementation ensures **efficient data management and a user-friendly interface**.
 
 ---
