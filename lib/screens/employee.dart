@@ -48,7 +48,7 @@ class EmployeeService {
   Stream<List<Employee>> getEmployees() => _col
       .orderBy('name')
       .snapshots()
-      .map((s) => s.docs.map((doc) => Employee.fromFirestore(doc)).toList());
+      .map((s) => s.docs.map((d) => Employee.fromFirestore(d)).toList());
 
   Future<void> addEmployee(Employee e) => _col.add(e.toMap());
 
@@ -60,7 +60,7 @@ class EmployeeService {
       .where('department', isEqualTo: dept)
       .orderBy('name')
       .snapshots()
-      .map((s) => s.docs.map((doc) => Employee.fromFirestore(doc)).toList());
+      .map((s) => s.docs.map((d) => Employee.fromFirestore(d)).toList());
 }
 
 class EmployeesPage extends StatefulWidget {
@@ -76,9 +76,9 @@ class _EmployeesPageState extends State<EmployeesPage> {
   String _searchQuery = '';
   bool _isSearching = false;
 
-  String _selectedDept = 'All';
+  String _selectedDept = "All";
 
-  final List<String> _departments = ['All', 'HR', 'IT', 'Finance', 'Marketing'];
+  final List<String> _departments = ["All", "HR", "IT", "Finance", "Marketing"];
 
   Stream<List<Employee>> get _activeStream {
     if (_selectedDept == "All") return _service.getEmployees();
@@ -101,9 +101,6 @@ class _EmployeesPageState extends State<EmployeesPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => _EmployeeForm(
         employee: employee,
         onSave: (e) async {
@@ -117,12 +114,12 @@ class _EmployeesPageState extends State<EmployeesPage> {
     );
   }
 
-  void _confirmDelete(Employee employee) {
+  void _confirmDelete(Employee e) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: Text("Delete Employee"),
-        content: Text("Delete ${employee.name}?"),
+        content: Text("Delete ${e.name}?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -131,7 +128,7 @@ class _EmployeesPageState extends State<EmployeesPage> {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              await _service.deleteEmployee(employee.id!);
+              await _service.deleteEmployee(e.id!);
               Navigator.pop(context);
             },
             child: Text("Delete"),
@@ -149,12 +146,12 @@ class _EmployeesPageState extends State<EmployeesPage> {
             ? TextField(
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: "Search Employee",
+                  hintText: "Search by name or email",
                   border: InputBorder.none,
                 ),
                 onChanged: (val) => setState(() => _searchQuery = val),
               )
-            : Text("Employees List"),
+            : Text("Employees"),
 
         actions: [
           IconButton(
@@ -208,21 +205,91 @@ class _EmployeesPageState extends State<EmployeesPage> {
 
                 final employees = _applySearch(snapshot.data ?? []);
 
+                int total = employees.length;
+
+                double avgSalary = 0;
+                if (employees.isNotEmpty) {
+                  avgSalary =
+                      employees.map((e) => e.salary).reduce((a, b) => a + b) /
+                      employees.length;
+                }
+
                 if (employees.isEmpty) {
                   return Center(child: Text("No employees found"));
                 }
 
-                return ListView.builder(
-                  itemCount: employees.length,
-                  itemBuilder: (_, i) {
-                    final e = employees[i];
+                return Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Text(
+                            "Showing $total Employees",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
 
-                    return _EmployeeCard(
-                      employee: e,
-                      onEdit: () => _openForm(employee: e),
-                      onDelete: () => _confirmDelete(e),
-                    );
-                  },
+                          if (_selectedDept != "All") ...[
+                            SizedBox(width: 8),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.purple,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                _selectedDept,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    Expanded(
+                      child: ListView.builder(
+                        padding: EdgeInsets.all(12),
+                        itemCount: employees.length,
+                        itemBuilder: (_, i) {
+                          final e = employees[i];
+
+                          return _EmployeeCard(
+                            employee: e,
+                            onEdit: () => _openForm(employee: e),
+                            onDelete: () => _confirmDelete(e),
+                          );
+                        },
+                      ),
+                    ),
+
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      color: Colors.grey.shade200,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Total Employees: $total",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            "Avg Salary: ₹${avgSalary.toStringAsFixed(0)}",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
@@ -247,18 +314,16 @@ class _EmployeeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(10),
       child: ListTile(
         leading: CircleAvatar(child: Text(employee.name[0].toUpperCase())),
-
         title: Text(employee.name),
-
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(employee.email),
-
-            Row(
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
               children: [
                 _Chip(label: "Age ${employee.age}"),
                 SizedBox(width: 6),
@@ -269,16 +334,10 @@ class _EmployeeCard extends StatelessWidget {
             ),
           ],
         ),
-
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: Icon(Icons.edit),
-              color: Colors.blue,
-              onPressed: onEdit,
-            ),
-
+            IconButton(icon: Icon(Icons.edit), onPressed: onEdit),
             IconButton(
               icon: Icon(Icons.delete),
               color: Colors.red,
@@ -362,17 +421,18 @@ class _EmployeeFormState extends State<_EmployeeForm> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.employee != null;
+
     return Padding(
       padding: EdgeInsets.all(16),
 
       child: Form(
         key: _formKey,
-
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              widget.employee == null ? "Add Employee" : "Edit Employee",
+              isEditing ? "Edit Employee" : "Add Employee",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
@@ -408,9 +468,7 @@ class _EmployeeFormState extends State<_EmployeeForm> {
 
             FilledButton(
               onPressed: _submit,
-              child: Text(
-                widget.employee == null ? "Add Employee" : "Save Changes",
-              ),
+              child: Text(isEditing ? "Save Changes" : "Add Employee"),
             ),
 
             SizedBox(height: 40),
@@ -438,7 +496,6 @@ class _Field extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       validator: (value) => value == null || value.isEmpty ? "Required" : null,
-
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(),
