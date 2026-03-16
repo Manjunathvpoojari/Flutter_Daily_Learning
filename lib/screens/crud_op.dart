@@ -57,6 +57,36 @@ class StudentService {
       .orderBy('name')
       .snapshots()
       .map((s) => s.docs.map((doc) => Student.fromFirestore(doc)).toList());
+
+  Stream<List<Student>> getStudentsQuery({
+    required String grade,
+    required int minAge,
+    required int maxAge,
+    required bool ascending,
+    required int limit,
+  }) {
+    Query query = _col;
+
+    //  apply grade filter for specific grades
+    if (grade != 'All') {
+      query = query.where('grade', isEqualTo: grade);
+    }
+
+    // age sorting
+    query = query.orderBy('age', descending: !ascending);
+
+    // range filter for age
+    query = query
+        .where('age', isGreaterThanOrEqualTo: minAge)
+        .where('age', isLessThanOrEqualTo: maxAge);
+
+    // applying the limit of students
+    query = query.limit(limit);
+
+    return query.snapshots().map(
+      (s) => s.docs.map((doc) => Student.fromFirestore(doc)).toList(),
+    );
+  }
 }
 
 class StudentsPage extends StatefulWidget {
@@ -78,10 +108,22 @@ class _StudentsPageState extends State<StudentsPage> {
 
   final List<String> _grades = ['All', 'A', 'B', 'C', 'D'];
 
-  Stream<List<Student>> get _activeStream {
-    if (_selectedGrade == "All") return _service.getStudents();
-    return _service.getStudentsByGrade(_selectedGrade);
-  }
+  // sorting
+  bool _ascending = true;
+
+  // age range
+  RangeValues _ageRange = RangeValues(1, 100);
+
+  // showmore limit
+  int _limit = 5;
+
+  Stream<List<Student>> get _activeStream => _service.getStudentsQuery(
+    grade: _selectedGrade,
+    minAge: _ageRange.start.toInt(),
+    maxAge: _ageRange.end.toInt(),
+    ascending: _ascending,
+    limit: _limit,
+  );
 
   // Searching name And email
   List<Student> _applySearch(List<Student> students) {
@@ -188,6 +230,16 @@ class _StudentsPageState extends State<StudentsPage> {
               }
             }),
           ),
+
+          IconButton(
+            icon: Icon(_ascending ? Icons.arrow_upward : Icons.arrow_downward),
+            tooltip: _ascending ? 'Oldest First' : 'Youngest First',
+
+            onPressed: () => setState(() {
+              _ascending = !_ascending;
+              _limit = 5;
+            }),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -222,11 +274,51 @@ class _StudentsPageState extends State<StudentsPage> {
                         fontWeight: FontWeight.w500,
                       ),
 
-                      onSelected: (_) => setState(() => _selectedGrade = grade),
+                      onSelected: (_) => setState(() {
+                        _selectedGrade = grade;
+                        _limit = 5;
+                      }),
                     ),
                   );
                 }).toList(),
               ),
+            ),
+          ),
+
+          Container(
+            color: Colors.purple.shade50,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Age Range: ${_ageRange.start.toInt()} - ${_ageRange.end.toInt()}",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.purple.shade800,
+                  ),
+                ),
+
+                RangeSlider(
+                  values: _ageRange,
+                  min: 1,
+                  max: 100,
+                  divisions: 99,
+
+                  labels: RangeLabels(
+                    _ageRange.start.toInt().toString(),
+                    _ageRange.end.toInt().toString(),
+                  ),
+
+                  activeColor: Colors.teal,
+
+                  onChanged: (newValue) => setState(() {
+                    _ageRange = newValue;
+                    _limit = 5;
+                  }),
+                ),
+              ],
             ),
           ),
 
@@ -315,6 +407,26 @@ class _StudentsPageState extends State<StudentsPage> {
                               ),
                             ),
                           ],
+
+                          SizedBox(width: 8),
+
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade700,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _ascending ? 'Age (↑)' : 'Age (↓)',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -332,6 +444,26 @@ class _StudentsPageState extends State<StudentsPage> {
                         ),
                       ),
                     ),
+
+                    if (students.length >= _limit)
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: OutlinedButton.icon(
+                          icon: Icon(Icons.expand_more),
+                          label: Text("Show more"),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.purple,
+                            side: BorderSide(color: Colors.purple),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 10,
+                            ),
+                          ),
+                          onPressed: () => setState(() {
+                            _limit += 5;
+                          }),
+                        ),
+                      ),
                   ],
                 );
               },

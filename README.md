@@ -136,6 +136,9 @@ The application has been continuously enhanced with new features as concepts wer
 - Users can even **Filter out the Students** based on the Grades sections.
 - **Employee** data page made exactly like Student page
 - Overall, the implementation ensures **efficient data management and a user-friendly interface**.
+- New feature added as ascending and descending through student age by adding an icon as well 
+- Range builder was made to choose list of students based on student age paradigm
+- limiting function builded for show more options to display 
 
 ---
 ## 📌 Project Status
