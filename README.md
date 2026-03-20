@@ -141,6 +141,16 @@ The application has been continuously enhanced with new features as concepts wer
 - limiting function builded for show more options to display 
 
 ---
+
+## Firebase Storage Spark/Blaze 
+
+- Gained knoweldge towards Spark vs Blaze difference when to use what and all 
+- Tried to work with free credits firebase storage with sample testing of image picker, file picker, url launcher and cached network images.
+- Created a FileModel class in screens/file.dart to handle file details such as name, URL, type, size, and upload time, along with a readable size format 
+- A FileService class was created to handle file upload operations using methods like putFile() and putData() for different file types. 
+- Alternatively looking for Supabase in upcoming updates as well
+
+---
 ## 📌 Project Status
 
 This Login App is a continuously evolving learning project.  
