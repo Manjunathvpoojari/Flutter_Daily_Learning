@@ -1,10 +1,10 @@
-import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:cached_network/cached_network.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FileModel {
   final String name;
@@ -40,29 +40,75 @@ class FileModel {
 }
 
 class FileService {
-  final _storage = FirebaseStorage.instance;
+  final _bucket = Supabase.instance.client.storage.from('uploads');
 
   // uploading the image
   Future<String> uploadImage(XFile imageFile) async {
     final fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final ref = _storage.ref().child("uploads/image/$fileName");
-    final uploadTask = await ref.putFile(File(imageFile.path));
-    return await uploadTask.ref.getDownloadURL();
+    final path = 'images/$fileName';
+    final bytes = await imageFile.readAsBytes();
+
+    await _bucket.uploadBinary(
+      path,
+      bytes,
+      fileOptions: FileOptions(contentType: 'image/jpeg'),
+    );
+    return _bucket.getPublicUrl(path);
   }
 
   // uploading the pdf
   Future<String> uploadPdf(PlatformFile file) async {
     final fileName = 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
-    final ref = _storage.ref().child("uploads/pdf/$fileName");
-    final uploadTask = await ref.putData((file.bytes!));
-    return await uploadTask.ref.getDownloadURL();
+    final path = 'pdfs/$fileName';
+    await _bucket.uploadBinary(
+      path,
+      file.bytes!,
+      fileOptions: FileOptions(contentType: 'application/pdf'),
+    );
+    return _bucket.getPublicUrl(path);
   }
 
   // uploading the video
   Future<String> uploadvideo(PlatformFile file) async {
     final fileName = 'video_${DateTime.now().millisecondsSinceEpoch}.mp4';
-    final ref = _storage.ref().child("uploads/video/$fileName");
-    final uploadTask = await ref.putData((file.bytes!));
-    return await uploadTask.ref.getDownloadURL();
+    final path = 'videos/$fileName';
+    if (file.path != null) {
+      await _bucket.upload(
+        path,
+        File(file.path!),
+        fileOptions: FileOptions(contentType: 'video/mp4'),
+      );
+    } else {
+      await _bucket.uploadBinary(
+        path,
+        file.bytes!,
+        fileOptions: FileOptions(contentType: 'video/mp4'),
+      );
+    }
+    return _bucket.getPublicUrl(path);
+  }
+
+  Future<List<FileModel>> getAllFiles() async {
+    final results = await Future.wait([
+      _bucket.list(path: 'images'),
+      _bucket.list(path: 'pdfs'),
+      _bucket.list(path: 'videos'),
+    ]);
+
+    final imagesFiles = results[0];
+    final pdfFiles = results[1];
+    final videoFiles = results[2];
+
+    FileModel toModel(FileObject f, String folder, String type) {
+      final path = "$folder/${f.name}";
+      return FileModel(
+        name: f.name,
+        url: _bucket.getPublicUrl(path),
+        type: type,
+        storagePath: path,
+        size: f.metadata?['size'] ?? 0,
+        uploadedAt: DateTime.tryParse(f.createdAt ?? '') ?? DateTime.now(),
+      );
+    }
   }
 }

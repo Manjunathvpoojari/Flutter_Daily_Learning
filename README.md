@@ -151,6 +151,15 @@ The application has been continuously enhanced with new features as concepts wer
 - Alternatively looking for Supabase in upcoming updates as well
 
 ---
+
+## Supabase Storage bucketList
+
+- Initial login set up and all made today , we created org and also a bucket storage 
+- further url and annon public keys were updated in flutter main.dart part
+- a practical demonstrations regarding what missed in firebase storage is being built 
+- Once complete there will be a option icon button which introduces towards this file, image and videos handling (like how modern app works and all)
+
+---
 ## 📌 Project Status
 
 This Login App is a continuously evolving learning project.  
