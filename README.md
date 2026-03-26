@@ -158,6 +158,8 @@ The application has been continuously enhanced with new features as concepts wer
 - further url and annon public keys were updated in flutter main.dart part
 - a practical demonstrations regarding what missed in firebase storage is being built 
 - Once complete there will be a option icon button which introduces towards this file, image and videos handling (like how modern app works and all)
+- The app is almost done ; sign in with google account in virtual emulator is made along with supabase policy creation
+- New policies were made in supabase regarding update and insert further uploading of images along with live camera on features were added .
 
 ---
 ## 📌 Project Status
