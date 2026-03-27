@@ -160,6 +160,7 @@ The application has been continuously enhanced with new features as concepts wer
 - Once complete there will be a option icon button which introduces towards this file, image and videos handling (like how modern app works and all)
 - The app is almost done ; sign in with google account in virtual emulator is made along with supabase policy creation
 - New policies were made in supabase regarding update and insert further uploading of images along with live camera on features were added .
+- Further the completion of image, pdf and also video uploads were made correctly
 
 ---
 ## 📌 Project Status
